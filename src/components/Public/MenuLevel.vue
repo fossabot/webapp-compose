@@ -105,19 +105,15 @@ ul {
   font-size: 15px;
   white-space: nowrap;
 
-  &.root {
-    max-width: calc(100vw - 120px);
+  &.root li {
+    display: inline-block;
+    cursor: pointer;
 
-    li {
-      display: inline-block;
-      cursor: pointer;
+    a {
+      padding: 13px 15px;
 
-      a {
-        padding: 13px 15px;
-
-        &:hover {
-          color: $appblue;
-        }
+      &:hover {
+        color: $appblue;
       }
     }
   }

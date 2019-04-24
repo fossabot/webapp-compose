@@ -28,8 +28,6 @@ import { mapGetters } from 'vuex'
 import MenuLevel from './MenuLevel'
 import navbarCollapse from '@/mixins/navbar_collapse'
 
-const collapserWidth = 55
-
 export default {
   components: {
     MenuLevel,
@@ -89,11 +87,11 @@ export default {
       const nav = document.getElementById('menu_lvl_1')
       const bb = document.getElementById('public_nav_collapse')
       const collapse = document.getElementById('public_nav_collapse_0')
-      const rOffset = document.getElementById('public_nav_to_admin_pannel').clientWidth + 50 || 200
+      const customCollapser = document.getElementById('public_nav_to_admin_pannel')
 
-      setTimeout(() => { this.collapser(nav, bb, collapse, collapserWidth, rOffset) }, 1)
+      setTimeout(() => { this.collapser(nav, bb, collapse, customCollapser) }, 1)
       window.onresize = () => {
-        this.collapser(nav, bb, collapse, collapserWidth, rOffset)
+        this.collapser(nav, bb, collapse, customCollapser)
       }
     })
   },
@@ -103,37 +101,47 @@ export default {
   },
 
   methods: {
-    collapser (nav, bb, collapse, extraOffset, rightOffset) {
-      const { children: nChildren = new HTMLCollection() } = nav
-      const collapseBody = collapse.getElementsByTagName('UL')[0]
-      if (!collapseBody) {
-        return
-      }
+    collapser (nav, bb, collapse, customCollapser = null, buffer = 20) {
+      if (!nav || !bb || !collapse) return
 
-      const bbCWidth = bb.clientWidth - rightOffset
+      const { children: navChildren = new HTMLCollection() } = nav
+      const [ collapseBody ] = collapse.getElementsByTagName('UL')
+      if (!collapseBody) return
+
+      const { clientWidth: collapseWidth } = collapse
+      let { clientWidth: bbWidth } = bb
+      if (customCollapser) bbWidth -= customCollapser.clientWidth
 
       // Check if overflow possible
-      if (nav.clientWidth >= bbCWidth) {
+      if (nav.clientWidth >= bbWidth) {
         let c = null
         // -2; skip last element (the 'more' dropdown)
-        for (let i = nChildren.length - 2; i >= 0; i--) {
-          c = nChildren.item(i)
+        for (let i = navChildren.length - 2; i >= 0; i--) {
+          c = navChildren.item(i)
 
           const { clientWidth, offsetLeft } = c
-          if (clientWidth + offsetLeft + extraOffset > bbCWidth) {
+          let elPos = clientWidth + offsetLeft + buffer
+
+          // Initially collapse has visibility: hidden, so it's width is excluded untill visible
+          if (this.collapsedCount) elPos += collapseWidth
+          if (elPos >= bbWidth) {
             c.dataset.collapsed = true
             c.dataset.clientWidth = clientWidth
 
-            // If none collapsed; element is hidden
-            if (!this.collapsedCount) {
-              collapse.style.display = 'inline-block'
+            // Initial show
+            if (this.collapsedCount <= 0) {
+              this.collapsedCount = 0
+              collapse.style.visibility = 'visible'
             }
             this.collapsedCount++
+
             if (!collapseBody.firstChild) {
               collapseBody.append(c)
             } else {
               collapseBody.insertBefore(c, collapseBody.firstChild)
             }
+          } else {
+            return
           }
         }
       } else {
@@ -142,13 +150,14 @@ export default {
 
         for (let i = 0; i < collapsedNodes.length; i++) {
           const cn = collapsedNodes[i]
-          if ((parseInt(cn.dataset.clientWidth) || cn.clientWidth) + nav.clientWidth + extraOffset <= bbCWidth) {
+          if ((parseInt(cn.dataset.clientWidth) || cn.clientWidth) + nav.clientWidth + buffer <= bbWidth) {
             delete cn.dataset.collapsed
             nav.insertBefore(cn, collapse)
             this.collapsedCount--
 
-            if (!this.collapsedCount) {
-              collapse.style.display = 'none'
+            if (this.collapsedCount <= 0) {
+              this.collapsedCount = 0
+              collapse.style.visibility = 'hidden'
             }
           } else {
             return
@@ -177,7 +186,7 @@ export default {
 
 #public_nav_collapse {
   #public_nav_collapse_0 {
-    display: none;
+    visibility: hidden;
 
     a {
       overflow: hidden;
