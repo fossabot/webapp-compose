@@ -101,7 +101,7 @@ export default {
   },
 
   methods: {
-    collapser (nav, bb, collapse, customCollapser = null, buffer = 20) {
+    collapser (nav, bb, collapse, customCollapser = null, buffer = 30) {
       if (!nav || !bb || !collapse) return
 
       const { children: navChildren = new HTMLCollection() } = nav
@@ -113,7 +113,7 @@ export default {
       if (customCollapser) bbWidth -= customCollapser.clientWidth
 
       // Check if overflow possible
-      if (nav.clientWidth >= bbWidth) {
+      if (nav.clientWidth + buffer >= bbWidth) {
         let c = null
         // -2; skip last element (the 'more' dropdown)
         for (let i = navChildren.length - 2; i >= 0; i--) {
