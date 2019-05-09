@@ -197,7 +197,7 @@ export default {
       this.sortColumn = sort
 
       if (this.options.presort) {
-        sort = this.options.presort + ', ' + sort
+        sort = sort + ', ' + this.options.presort
       }
 
       this.fetch({ ...this.filter, sort })
